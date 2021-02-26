@@ -1,0 +1,6 @@
+bin
+config
+loyalty.tar.gz
+artifacts/channel/crypto-config
+artifacts/channel/genesis.block
+artifacts/channel/mychannel.tx

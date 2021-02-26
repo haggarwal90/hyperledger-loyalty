@@ -1,0 +1,263 @@
+version: "2"
+
+networks:
+  test:
+
+services:
+  ca-bookstore:
+    image: hyperledger/fabric-ca
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca.bookstore.loyaltybenefits.com
+      - FABRIC_CA_SERVER_CA_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.bookstore.loyaltybenefits.com-cert.pem
+      - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/fabric-ca-server-config/priv_sk
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-tls/tlsca.bookstore.loyaltybenefits.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-tls/priv_sk
+    ports:
+      - "7054:7054"
+    command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
+    volumes:
+      - ../artifacts/channel/crypto-config/peerOrganizations/bookstore.loyaltybenefits.com/ca/:/etc/hyperledger/fabric-ca-server-config
+      - ../artifacts/channel/crypto-config/peerOrganizations/bookstore.loyaltybenefits.com/tlsca/:/etc/hyperledger/fabric-ca-server-tls
+    container_name: ca.bookstore.loyaltybenefits.com
+    hostname: ca.bookstore.loyaltybenefits.com
+    networks:
+      - test
+
+  ca-coffeecafe:
+    image: hyperledger/fabric-ca
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca.coffeecafe.loyaltybenefits.com
+      - FABRIC_CA_SERVER_CA_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.coffeecafe.loyaltybenefits.com-cert.pem
+      - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/fabric-ca-server-config/priv_sk
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-tls/tlsca.coffeecafe.loyaltybenefits.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-tls/priv_sk
+    ports:
+      - "8054:7054"
+    command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
+    volumes:
+      - ../artifacts/channel/crypto-config/peerOrganizations/coffeecafe.loyaltybenefits.com/ca/:/etc/hyperledger/fabric-ca-server-config
+      - ../artifacts/channel/crypto-config/peerOrganizations/coffeecafe.loyaltybenefits.com/tlsca/:/etc/hyperledger/fabric-ca-server-tls
+    container_name: ca.coffeecafe.loyaltybenefits.com
+    hostname: ca.coffeecafe.loyaltybenefits.com
+    networks:
+      - test
+
+  ca-retailstore:
+    image: hyperledger/fabric-ca
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca.retailstore.loyaltybenefits.com
+      - FABRIC_CA_SERVER_CA_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.retailstore.loyaltybenefits.com-cert.pem
+      - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/fabric-ca-server-config/priv_sk
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-tls/tlsca.retailstore.loyaltybenefits.com-cert.pem
+      - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-tls/priv_sk
+    ports:
+      - "9054:7054"
+    command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
+    volumes:
+      - ../artifacts/channel/crypto-config//peerOrganizations/retailstore.loyaltybenefits.com/ca/:/etc/hyperledger/fabric-ca-server-config
+      - ../artifacts/channel/crypto-config/peerOrganizations/retailstore.loyaltybenefits.com/tlsca/:/etc/hyperledger/fabric-ca-server-tls
+    container_name: ca.retailstore.loyaltybenefits.com
+    hostname: ca.retailstore.loyaltybenefits.com
+    networks:
+      - test
+
+  orderer.loyaltybenefits.com:
+    container_name: orderer.loyaltybenefits.com
+    image: hyperledger/fabric-orderer:2.1
+    dns_search: .
+    environment:
+      - ORDERER_GENERAL_LOGLEVEL=info
+      - FABRIC_LOGGING_SPEC=INFO
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_GENESISMETHOD=file
+      - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/genesis.block
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_KAFKA_VERBOSE=true
+      - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_METRICS_PROVIDER=prometheus
+      - ORDERER_OPERATIONS_LISTENADDRESS=0.0.0.0:8443
+      - ORDERER_GENERAL_LISTENPORT=7050
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/orderers
+    command: orderer
+    ports:
+      - 7050:7050
+      - 8443:8443
+    networks:
+      - test
+    volumes:
+      - ../artifacts/channel/genesis.block:/var/hyperledger/orderer/genesis.block
+      - ../artifacts/channel/crypto-config/ordererOrganizations/loyaltybenefits.com/orderers/orderer.loyaltybenefits.com/msp:/var/hyperledger/orderer/msp
+      - ../artifacts/channel/crypto-config/ordererOrganizations/loyaltybenefits.com/orderers/orderer.loyaltybenefits.com/tls:/var/hyperledger/orderer/tls
+
+  couchdb0:
+    container_name: couchdb0
+    image: hyperledger/fabric-couchdb
+    environment:
+      - COUCHDB_USER=
+      - COUCHDB_PASSWORD=
+    ports:
+      - 5984:5984
+    networks:
+      - test
+
+  couchdb1:
+    container_name: couchdb1
+    image: hyperledger/fabric-couchdb
+    environment:
+      - COUCHDB_USER=
+      - COUCHDB_PASSWORD=
+    ports:
+      - 6984:5984
+    networks:
+      - test
+
+  couchdb2:
+    container_name: couchdb2
+    image: hyperledger/fabric-couchdb
+    environment:
+      - COUCHDB_USER=
+      - COUCHDB_PASSWORD=
+    ports:
+      - 7984:5984
+    networks:
+      - test
+
+  peer0.bookstore.loyaltybenefits.com:
+    container_name: peer0.bookstore.loyaltybenefits.com
+    extends:
+      file: base.yaml
+      service: peer-base
+    environment:
+      - FABRIC_LOGGING_SPEC=DEBUG
+      - ORDERER_GENERAL_LOGLEVEL=DEBUG
+      - CORE_PEER_LOCALMSPID=BookstoreMSP
+
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=docker_test
+
+      - CORE_PEER_ID=peer0.bookstore.loyaltybenefits.com
+      - CORE_PEER_ADDRESS=peer0.bookstore.loyaltybenefits.com:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.bookstore.loyaltybenefits.com:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      # Peer used to bootstrap gossip within organisation
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.bookstore.loyaltybenefits.com:7051
+      # Exposed for discovery Service
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.bookstore.loyaltybenefits.com:7051
+
+      # - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:9440
+
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb0:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+      - CORE_METRICS_PROVIDER=prometheus
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/crypto/peer/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/crypto/peer/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/crypto/peer/tls/ca.crt
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto/peer/msp
+    depends_on:
+      - couchdb0
+    ports:
+      - 7051:7051
+    volumes:
+      - ../artifacts/channel/crypto-config/peerOrganizations/bookstore.loyaltybenefits.com/peers/peer0.bookstore.loyaltybenefits.com/msp:/etc/hyperledger/crypto/peer/msp
+      - ../artifacts/channel/crypto-config/peerOrganizations/bookstore.loyaltybenefits.com/peers/peer0.bookstore.loyaltybenefits.com/tls:/etc/hyperledger/crypto/peer/tls
+      - /var/run/:/host/var/run/
+    networks:
+      - test
+
+  peer0.retailstore.loyaltybenefits.com:
+    container_name: peer0.retailstore.loyaltybenefits.com
+    extends:
+      file: base.yaml
+      service: peer-base
+    environment:
+      - FABRIC_LOGGING_SPEC=DEBUG
+      - ORDERER_GENERAL_LOGLEVEL=debug
+      - CORE_PEER_LOCALMSPID=RetailstoreMSP
+
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=docker_test
+
+      - CORE_PEER_ID=peer0.retailstore.loyaltybenefits.com
+      - CORE_PEER_ADDRESS=peer0.retailstore.loyaltybenefits.com:9051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:9051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.retailstore.loyaltybenefits.com:9052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9052
+      # # Exposed for discovery Service
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.retailstore.loyaltybenefits.com:9051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.retailstore.loyaltybenefits.com:9051
+
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb2:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+      - CORE_METRICS_PROVIDER=prometheus
+      # - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:9440
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/crypto/peer/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/crypto/peer/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/crypto/peer/tls/ca.crt
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto/peer/msp
+    ports:
+      - 9051:9051
+    volumes:
+      - ../artifacts/channel/crypto-config/peerOrganizations/retailstore.loyaltybenefits.com/peers/peer0.retailstore.loyaltybenefits.com/msp:/etc/hyperledger/crypto/peer/msp
+      - ../artifacts/channel/crypto-config/peerOrganizations/retailstore.loyaltybenefits.com/peers/peer0.retailstore.loyaltybenefits.com/tls:/etc/hyperledger/crypto/peer/tls
+      - /var/run/:/host/var/run/
+    networks:
+      - test
+
+  peer0.coffeecafe.loyaltybenefits.com:
+    container_name: peer0.coffeecafe.loyaltybenefits.com
+    extends:
+      file: base.yaml
+      service: peer-base
+    environment:
+      - FABRIC_LOGGING_SPEC=DEBUG
+      - ORDERER_GENERAL_LOGLEVEL=debug
+      - CORE_PEER_LOCALMSPID=CoffeecafeMSP
+
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=docker_test
+
+      - CORE_PEER_ID=peer0.coffeecafe.loyaltybenefits.com
+      - CORE_PEER_ADDRESS=peer0.coffeecafe.loyaltybenefits.com:10051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:10051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.coffeecafe.loyaltybenefits.com:10052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:10052
+      # Exposed for discovery Service
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.coffeecafe.loyaltybenefits.com:10051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.coffeecafe.loyaltybenefits.com:10051
+
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb1:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+      - CORE_METRICS_PROVIDER=prometheus
+      # - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:9440
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/crypto/peer/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/crypto/peer/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/crypto/peer/tls/ca.crt
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/crypto/peer/msp
+    ports:
+      - 10051:10051
+    volumes:
+      - ../artifacts/channel/crypto-config/peerOrganizations/coffeecafe.loyaltybenefits.com/peers/peer0.coffeecafe.loyaltybenefits.com/msp:/etc/hyperledger/crypto/peer/msp
+      - ../artifacts/channel/crypto-config/peerOrganizations/coffeecafe.loyaltybenefits.com/peers/peer0.coffeecafe.loyaltybenefits.com/tls:/etc/hyperledger/crypto/peer/tls
+      - /var/run/:/host/var/run/
+    networks:
+      - test
